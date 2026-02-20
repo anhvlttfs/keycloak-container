@@ -1,0 +1,42 @@
+name: keycloak
+
+services:
+  keycloak-instance:
+    container_name: keycloak
+    image: quay.io/keycloak/keycloak:26.5
+    env_file:
+      - ./.env
+    ports:
+      - 127.0.0.1:8081:8080
+    depends_on:
+      mysqldb:
+        condition: service_healthy
+    networks:
+      - backend
+    command:
+      start --hostname-strict false --proxy-headers xforwarded --http-enabled=true --db=mysql
+      --db-url="jdbc:mysql://mysqldb:3306/$MYSQL_DATABASE?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
+      --db-username="$MYSQL_USER" --db-password="$MYSQL_PASSWORD" --features=http-optimized-serializers
+
+  mysqldb:
+    container_name: mysqldb
+    image: mysql:lts
+    restart: always
+    env_file:
+      - ./.env
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mysql_data:
+
+networks:
+  backend:
+    driver: bridge
