@@ -3,7 +3,7 @@ name: keycloak
 services:
   keycloak-instance:
     container_name: keycloak
-    image: quay.io/keycloak/keycloak:26.5
+    image: quay.io/keycloak/keycloak:latest
     env_file:
       - ./.env
     ports:
@@ -11,6 +11,7 @@ services:
     depends_on:
       mysqldb:
         condition: service_healthy
+    restart: unless-stopped
     networks:
       - backend
     command:
